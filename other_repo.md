@@ -2,6 +2,47 @@
 
 Agent时代很多知识都失效了，我搞Triton编译器已经一年了，把我的context共享给大家。本文后续不再更新，更多信息可直接通过 AI 检索获取。
 
+### 零、昇腾（Ascend）Triton 专属资源 ⭐
+
+本教程是昇腾适配版，所以把昇腾相关资料单独提到最前面。学习路径建议：官方文档 → tutorials 样例 → ops 最佳实践。
+
+**官方仓库与文档**
+
+- [triton-lang/triton-ascend](https://github.com/triton-lang/triton-ascend)<br>
+  昇腾 Triton 后端主仓库。`docs/zh/` 下是中文文档，`third_party/ascend/tutorials/` 下是官方样例。
+- [算子开发指南](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/programming_guide/index.md)<br>
+  **最该读的一篇**。分核、片上内存（UB）、访存对齐、Tiling、Autotune 都在这儿。
+- [GPU 算子迁移指南](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/migration_guide/migrate_from_gpu.md)<br>
+  有 GPU Triton 经验的话从这篇入手最快，含 `coreDim` 超限、`ub overflow` 两类高频问题的解法。
+- [架构差异分析](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/migration_guide/architecture_difference.md)<br>
+  讲清 NPU 的"物理核强绑定"和 GPU"逻辑维度并行"的本质区别，以及 `auto-blockify`。
+- [调试指南](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/debug_guide/debugging.md)<br>
+  `TRITON_INTERPRET` 解释器模式、`tl.device_print`、IR dump、编译错误定位。
+- [`do_bench_npu` 性能测试指南](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/debug_guide/do_bench_npu_guide.md)<br>
+  在昇腾上**正确测性能**的方法，别用 `time.time()`。
+- [环境变量与编译选项参考](https://github.com/triton-lang/triton-ascend/blob/main/docs/zh/environment_variable_and_compiler_options_reference.md)<br>
+  所有旋钮的权威清单，调优时查这个。
+- [Triton-Ascend API 文档](https://github.com/triton-lang/triton-ascend/tree/main/docs/zh/triton_api)<br>
+  每个 `tl.*` 原语在昇腾上的 dtype 支持表和特殊限制，写代码时随手查。
+
+**算子样例与最佳实践**
+
+- [官方 tutorials](https://github.com/triton-lang/triton-ascend/tree/main/third_party/ascend/tutorials)<br>
+  从 `01-vector-add.py` 到 `06-fused-attention.py`、`09-persistent-matmul.py`，本教程之后的自学主线。
+- [Ascend/triton-ascend-ops](https://github.com/Ascend/triton-ascend-ops)<br>
+  `tutorial/basic/` 是基础算子（向量加、vector_cmp 的 dtype 优化），`tutorial/best_practice/` 是完整优化案例（gather/scatter、MoE 相关）。
+- [典型算子样例文档](https://github.com/triton-lang/triton-ascend/tree/main/docs/zh/examples)<br>
+  Softmax、LayerNorm、Attention、Matmul 的端到端讲解。
+
+**昇腾生态**
+
+- [CANN 社区](https://www.hiascend.com/cann)<br>
+  昇腾异构计算架构，Triton-Ascend 底层依赖它。
+- [Ascend C](https://www.hiascend.com/ascend-c)<br>
+  昇腾原生的 C++ 算子开发语言。Triton 写不出来或性能不够时的下一站，两者可以对照理解硬件模型。
+- [昇腾兼容性查询助手](https://www.hiascend.com/hardware/compatibility)<br>
+  查硬件型号、OS、CANN 版本的配套关系。
+
 ### 一、Triton是什么
 
 Triton 可以简单理解为：
